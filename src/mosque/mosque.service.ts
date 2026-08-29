@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMosqueDto } from './dto/create-mosque.dto';
 import { UpdateMosqueDto } from './dto/update-mosque.dto';
 import { Mosque } from './entities/mosque.entity';
@@ -75,16 +75,61 @@ export class MosqueService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} mosque`;
+  async findOne(id: string) {
+    const mosque = await this.mosqueRepository.findOne({ 
+      where: { id }, 
+      relations: { manager: true },
+      select: {
+        id: true,
+        name: true,
+        location: true,
+        createdAt: true,
+        updatedAt: true,
+        manager: {
+          name: true,
+          email: true,
+          phoneNumber: true,
+          createdAt: true,
+        }
+      }
+    });
+
+    if (!mosque) {
+      throw new NotFoundException(`Mosque with ID ${id} not found`);
+    }
+    
+    return mosque;
   }
 
-  update(id: number, updateMosqueDto: UpdateMosqueDto) {
-    return `This action updates a #${id} mosque`;
+  async findMyMosques(managerId: string) {
+    const mosques = await this.mosqueRepository.find({
+      where: { manager: { id: managerId } },
+      relations: { manager: true },
+      select: {
+        id: true,
+        name: true,
+        manager: {
+          id: true,
+        }
+      }
+    });
+    return mosques;
+  }
+
+  async update(id: string, updateMosqueDto: UpdateMosqueDto) {
+    const mosque = await this.mosqueRepository.findOne({ where: { id } });
+
+    if (!mosque) {
+      throw new NotFoundException(`Mosque not found`);
+    }
+
+    Object.assign(mosque, updateMosqueDto);
+    await this.mosqueRepository.save(mosque);
+    return { message: 'تم التحديث بنجاح' };
   }
 
   async remove(id: string) {
-    const mosque = this.mosqueRepository.findOne({ where: { id } });
+    const mosque = await this.mosqueRepository.findOne({ where: { id } });
     if (!mosque) {
       throw new NotFoundException(`Mosque with ID ${id} not found`);
     }

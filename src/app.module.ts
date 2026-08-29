@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { MosqueModule } from './mosque/mosque.module';
+import { CircleModule } from './circle/circle.module';
+import { StudentsModule } from './students/students.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { MosqueModule } from './mosque/mosque.module';
     UsersModule,
     AuthModule,
     MosqueModule,
+    CircleModule,
+    StudentsModule,
     
   ],
   controllers: [],

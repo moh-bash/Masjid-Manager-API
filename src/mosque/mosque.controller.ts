@@ -17,6 +17,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/role.guard';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { Request, response } from 'express';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('mosques')
 export class MosqueController {
@@ -36,14 +38,21 @@ export class MosqueController {
     return this.mosqueService.findAll(paginationQuery);
   }
 
+  @Get('me')
+  @UseGuards(AuthGuard)
+  findMyMosques(@CurrentUser() user: any) {
+    const managerId = user?.id;
+    return this.mosqueService.findMyMosques(managerId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.mosqueService.findOne(+id);
+    return this.mosqueService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMosqueDto: UpdateMosqueDto) {
-    return this.mosqueService.update(+id, updateMosqueDto);
+    return this.mosqueService.update(id, updateMosqueDto);
   }
 
   @Delete(':id')

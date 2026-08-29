@@ -41,7 +41,8 @@ export class AuthService {
       throw new BadRequestException('Invalid email or password');
     }
     const token = await this.generateJWT({ userId: foundUser.id });
-    return { token };
+    const role = foundUser.role;
+    return { token, role };
   }
 
   private async generateJWT(payload: any) {
