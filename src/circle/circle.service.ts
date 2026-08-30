@@ -1,26 +1,208 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Circle } from './entities/circle.entity';
 import { CreateCircleDto } from './dto/create-circle.dto';
 import { UpdateCircleDto } from './dto/update-circle.dto';
+import { UsersService } from '../users/users.service';
+import { Mosque } from '../mosque/entities/mosque.entity';
+import { Role } from '../users/enums/roles.enum';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 @Injectable()
-export class CircleService {
-  create(createCircleDto: CreateCircleDto) {
-    return 'This action adds a new circle';
+export class CirclesService {
+  constructor(
+    @InjectRepository(Circle)
+    private readonly circleRepository: Repository<Circle>,
+    @InjectRepository(Mosque)
+    private readonly mosqueRepository: Repository<Mosque>,
+    private readonly usersService: UsersService,
+  ) {}
+
+  async create(createCircleDto: CreateCircleDto, currentUser: any) {
+    const mosque = await this.mosqueRepository.findOne({
+      where: { id: createCircleDto.mosqueId },
+      relations: { manager: true },
+    });
+
+    if (!mosque) {
+      throw new NotFoundException('المسجد المطلوب غير موجود');
+    }
+
+    const isSystemAdmin = currentUser.role?.includes(Role.SYSTEM_ADMIN);
+    const isMosqueManager = mosque.manager?.id === currentUser.id;
+
+    if (!isSystemAdmin && !isMosqueManager) {
+      throw new ForbiddenException('لا تملك صلاحية إضافة حلقة لهذا المسجد');
+    }
+
+    const teacher = await this.usersService.findUserByEmail(
+      createCircleDto.teacherEmail,
+    );
+
+    if (!teacher) {
+      throw new NotFoundException('المعلم بهذا البريد الإلكتروني غير موجود');
+    }
+
+    if (!teacher.role.includes(Role.CIRCLE_TEACHER)) {
+      await this.usersService.addRoleToUser(teacher, Role.CIRCLE_TEACHER);
+    }
+
+    const circle = this.circleRepository.create({
+      name: createCircleDto.name,
+      description: createCircleDto.description,
+      level: createCircleDto.level,
+      maxStudents: createCircleDto.maxStudents,
+      mosque,
+      teacher,
+    });
+
+    return await this.circleRepository.save(circle);
   }
 
-  findAll() {
-    return `This action returns all circle`;
+  async findByMosque(mosqueId: string, paginationQuery: PaginationQueryDto) {
+    const { page = 1, limit = 10 } = paginationQuery;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.circleRepository.findAndCount({
+      where: { mosque: { id: mosqueId } },
+      skip,
+      take: limit,
+      relations: {
+        teacher: true,
+        mosque: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        level: true,
+        maxStudents: true,
+        createdAt: true,
+        teacher: {
+          id: true,
+          name: true,
+          email: true,
+          phoneNumber: true,
+        },
+        mosque: {
+          id: true,
+          name: true,
+        },
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} circle`;
+  async findOne(id: string) {
+    const circle = await this.circleRepository.findOne({
+      where: { id },
+      relations: { teacher: true, mosque: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        level: true,
+        maxStudents: true,
+        createdAt: true,
+        updatedAt: true,
+        teacher: {
+          id: true,
+          name: true,
+          email: true,
+          phoneNumber: true,
+        },
+        mosque: {
+          id: true,
+          name: true,
+        },
+      },
+    });
+
+    if (!circle) {
+      throw new NotFoundException(`الحلقة غير موجودة`);
+    }
+
+    return circle;
   }
 
-  update(id: number, updateCircleDto: UpdateCircleDto) {
-    return `This action updates a #${id} circle`;
+  async update(id: string, updateCircleDto: UpdateCircleDto, currentUser: any) {
+    const circle = await this.circleRepository.findOne({
+      where: { id },
+      relations: { mosque: { manager: true }, teacher: true },
+    });
+
+    if (!circle) {
+      throw new NotFoundException('الحلقة غير موجودة');
+    }
+
+    const isSystemAdmin = currentUser.role?.includes(Role.SYSTEM_ADMIN);
+    const isMosqueManager = circle.mosque?.manager?.id === currentUser.id;
+
+    if (!isSystemAdmin && !isMosqueManager) {
+      throw new ForbiddenException('لا تملك صلاحية تعديل هذه الحلقة');
+    }
+
+    if (updateCircleDto.teacherEmail) {
+      const teacher = await this.usersService.findUserByEmail(
+        updateCircleDto.teacherEmail,
+      );
+      if (!teacher) {
+        throw new NotFoundException('المعلم بهذا البريد الإلكتروني غير موجود');
+      }
+      if (!teacher.role.includes(Role.CIRCLE_TEACHER)) {
+        await this.usersService.addRoleToUser(teacher, Role.CIRCLE_TEACHER);
+      }
+      circle.teacher = teacher;
+    }
+
+    if (updateCircleDto.name) circle.name = updateCircleDto.name;
+    if (updateCircleDto.description !== undefined)
+      circle.description = updateCircleDto.description;
+    if (updateCircleDto.level) circle.level = updateCircleDto.level;
+    if (updateCircleDto.maxStudents)
+      circle.maxStudents = updateCircleDto.maxStudents;
+
+    await this.circleRepository.save(circle);
+    return { message: 'تم تحديث الحلقة بنجاح' };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} circle`;
+  async remove(id: string, currentUser: any) {
+    const circle = await this.circleRepository.findOne({
+      where: { id },
+      relations: { mosque: { manager: true } },
+    });
+
+    if (!circle) {
+      throw new NotFoundException('الحلقة غير موجودة');
+    }
+
+    const isSystemAdmin = currentUser.role?.includes(Role.SYSTEM_ADMIN);
+    const isMosqueManager = circle.mosque?.manager?.id === currentUser.id;
+
+    if (!isSystemAdmin && !isMosqueManager) {
+      throw new ForbiddenException('لا تملك صلاحية حذف هذه الحلقة');
+    }
+
+    await this.circleRepository.delete(id);
+    return { message: 'تم حذف الحلقة بنجاح' };
   }
 }
