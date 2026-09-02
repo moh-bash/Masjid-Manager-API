@@ -33,6 +33,14 @@ export class CirclesController {
     return this.circlesService.create(createCircleDto, user);
   }
 
+  
+  @Get('me')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.CIRCLE_TEACHER)
+  findMyCircle(@CurrentUser() user: any) {
+    return this.circlesService.findMyCircle(user);
+  }
+
   @Get('mosque/:mosqueId')
   @UseGuards(AuthGuard)
   findByMosque(

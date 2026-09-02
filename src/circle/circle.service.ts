@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import { Circle } from './entities/circle.entity';
 import { CreateCircleDto } from './dto/create-circle.dto';
 import { UpdateCircleDto } from './dto/update-circle.dto';
@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { Mosque } from '../mosque/entities/mosque.entity';
 import { Role } from '../users/enums/roles.enum';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { StudentCircle } from '../students/entities/student-circle.entity';
 
 @Injectable()
 export class CirclesService {
@@ -21,6 +22,8 @@ export class CirclesService {
     @InjectRepository(Mosque)
     private readonly mosqueRepository: Repository<Mosque>,
     private readonly usersService: UsersService,
+    @InjectRepository(StudentCircle)
+    private readonly studentCircleRepository: Repository<StudentCircle>,
   ) {}
 
   async create(createCircleDto: CreateCircleDto, currentUser: any) {
@@ -62,6 +65,22 @@ export class CirclesService {
     });
 
     return await this.circleRepository.save(circle);
+  }
+
+  async findMyCircle(currentUser: any) {
+    const circle = await this.circleRepository.find({
+      where: { teacher: { id: currentUser.id } },
+      relations: { mosque: true },
+      select: {
+        id: true,
+        name: true,
+        teacher: {
+          id: true,
+        },
+      },
+    });
+
+    return circle;
   }
 
   async findByMosque(mosqueId: string, paginationQuery: PaginationQueryDto) {
@@ -116,32 +135,25 @@ export class CirclesService {
     const circle = await this.circleRepository.findOne({
       where: { id },
       relations: { teacher: true, mosque: true },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        level: true,
-        maxStudents: true,
-        createdAt: true,
-        updatedAt: true,
-        teacher: {
-          id: true,
-          name: true,
-          email: true,
-          phoneNumber: true,
-        },
-        mosque: {
-          id: true,
-          name: true,
-        },
-      },
     });
 
     if (!circle) {
       throw new NotFoundException(`الحلقة غير موجودة`);
     }
 
-    return circle;
+    const activeStudentsCount = await this.studentCircleRepository.count({
+      where: { circle: { id }, leaveDate: IsNull() },
+    });
+
+    const historicalStudentsCount = await this.studentCircleRepository.count({
+      where: { circle: { id }, leaveDate: Not(IsNull()) },
+    });
+
+    return {
+      ...circle,
+      activeStudentsCount,
+      historicalStudentsCount,
+    };
   }
 
   async update(id: string, updateCircleDto: UpdateCircleDto, currentUser: any) {

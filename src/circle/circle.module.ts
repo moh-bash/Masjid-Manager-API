@@ -6,12 +6,14 @@ import { Circle } from './entities/circle.entity';
 import { Mosque } from '../mosque/entities/mosque.entity';
 import { UsersModule } from '../users/users.module';
 import { AuthModule } from '../auth/auth.module';
+import { StudentCircle } from '../students/entities/student-circle.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Circle, Mosque]),
     UsersModule,
     AuthModule,
+    TypeOrmModule.forFeature([StudentCircle]),
   ],
   controllers: [CirclesController],
   providers: [CirclesService],
