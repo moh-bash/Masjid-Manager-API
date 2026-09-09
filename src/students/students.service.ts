@@ -16,6 +16,7 @@ import { UpdateStudentDto } from './dto/update-student.dto';
 import { TransferStudentDto } from './dto/transfer-student.dto';
 import { Role } from '../users/enums/roles.enum';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { StudentLinkService } from '../student-link/student-link.service';
 
 @Injectable()
 export class StudentsService {
@@ -29,7 +30,8 @@ export class StudentsService {
     @InjectRepository(Circle)
     private readonly circleRepository: Repository<Circle>,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>, 
+    private readonly studentLinkService: StudentLinkService,
   ) {}
 
   private mapStudentWithAge(student: Student) {
@@ -108,6 +110,11 @@ export class StudentsService {
     });
 
     await this.studentCircleRepository.save(studentCircle);
+
+   await this.studentLinkService.generateOrUpdateCode(
+      { studentId: savedStudent.id },
+      currentUser,
+    );
 
     return this.mapStudentWithAge(savedStudent);
   }
@@ -278,6 +285,35 @@ export class StudentsService {
     };
   }
 
+   async findMyChildren(parentId: string) {
+    const students = await this.studentRepository.find({
+      where: { parent: { id: parentId } },
+      relations: {
+        mosque: true,
+        circleHistory: {
+          circle: {
+            teacher: true,
+          },
+        },
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    return students.map((student) => {
+      const activeEnrollment = student.circleHistory?.find(
+        (ch) => ch.leaveDate === null,
+      );
+
+      return {
+        id: student.id,
+        name: student.name,
+        mosqueName: student.mosque?.name || 'غير محدد',
+        circleName: activeEnrollment?.circle?.name || 'غير مسجل في حلقة ',
+        teacherName: activeEnrollment?.circle?.teacher?.name || 'لا يوجد معلم',
+      };
+    });
+  }
+
   async findOne(id: string) {
     const student = await this.studentRepository.findOne({
       where: { id },
@@ -292,6 +328,8 @@ export class StudentsService {
       throw new NotFoundException('الطالب غير موجود');
     }
 
+    const linkCode = await this.studentLinkService.getCodeByStudentId(id);
+
     const activeEnrollment = student.circleHistory?.find(
       (ch) => ch.leaveDate === null,
     );
@@ -305,8 +343,10 @@ export class StudentsService {
         leaveDate: ch.leaveDate,
       }));
 
+
     return {
       ...this.mapStudentWithAge(student),
+      linkCode,
       activeCircle: activeEnrollment
         ? {
             circleId: activeEnrollment.circle.id,

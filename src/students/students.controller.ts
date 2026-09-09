@@ -62,6 +62,13 @@ export class StudentsController {
     );
   }
 
+  @Get('my-children')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.PARENT) 
+  findMyChildren(@CurrentUser() user: any) {
+    return this.studentsService.findMyChildren(user.id);
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.SYSTEM_ADMIN, Role.MOSQUE_MANAGER, Role.CIRCLE_TEACHER)

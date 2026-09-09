@@ -9,12 +9,14 @@ import { Circle } from '../circle/entities/circle.entity';
 import { User } from '../users/entities/users.entity';
 import { AuthModule } from '../auth/auth.module';
 import { UsersModule } from '../users/users.module';
+import { StudentLinkModule } from '../student-link/student-link.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Student, StudentCircle, Mosque, Circle, User]),
     AuthModule,
     UsersModule,
+    StudentLinkModule
   ],
   controllers: [StudentsController],
   providers: [StudentsService],

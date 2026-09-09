@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { MosqueModule } from './mosque/mosque.module';
 import { CircleModule } from './circle/circle.module';
 import { StudentsModule } from './students/students.module';
+import { StudentLinkModule } from './student-link/student-link.module';
+import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { StudentsModule } from './students/students.module';
     MosqueModule,
     CircleModule,
     StudentsModule,
+    StudentLinkModule,
+    AttendanceModule,
     
   ],
   controllers: [],

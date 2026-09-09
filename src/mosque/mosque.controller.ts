@@ -17,7 +17,6 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/role.guard';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
-import { Request, response } from 'express';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('mosques')
