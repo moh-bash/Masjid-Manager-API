@@ -8,6 +8,7 @@ import { CircleModule } from './circle/circle.module';
 import { StudentsModule } from './students/students.module';
 import { StudentLinkModule } from './student-link/student-link.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AttendanceModule } from './attendance/attendance.module';
     StudentsModule,
     StudentLinkModule,
     AttendanceModule,
+    PostsModule,
     
   ],
   controllers: [],
