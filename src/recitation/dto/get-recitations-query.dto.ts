@@ -1,8 +1,19 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 
 export class GetRecitationsQueryDto extends PaginationQueryDto {
+  @IsOptional()
+  @IsUUID()
+  circleId?: string;
+
   @IsOptional()
   @IsUUID()
   studentId?: string;
@@ -14,6 +25,10 @@ export class GetRecitationsQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsUUID()
   teacherId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  date?: string;
 
   @IsOptional()
   @Type(() => Number)

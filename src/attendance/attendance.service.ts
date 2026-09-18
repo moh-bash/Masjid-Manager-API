@@ -110,6 +110,42 @@ export class AttendanceService {
     };
   }
 
+  async getCircleSessions(circleId: string, currentUser: any) {
+    const circle = await this.circleRepository.findOne({
+      where: { id: circleId },
+      relations: { teacher: true, mosque: { manager: true } },
+    });
+
+    if (!circle) {
+      throw new NotFoundException('الحلقة المحددة غير موجودة');
+    }
+
+    const roles: Role[] = Array.isArray(currentUser.role)
+      ? currentUser.role
+      : [];
+
+    const isCircleTeacher = circle.teacher?.id === currentUser.id;
+    const isManager =
+      circle.mosque?.manager?.id === currentUser.id ||
+      roles.includes(Role.SYSTEM_ADMIN) ||
+      roles.includes(Role.MOSQUE_MANAGER);
+
+    if (!isCircleTeacher && !isManager) {
+      throw new ForbiddenException('لا تملك صلاحية عرض جلسات هذه الحلقة');
+    }
+
+    const sessions = await this.sessionRepository.find({
+      where: { circle: { id: circleId } },
+      order: { date: 'DESC' },
+    });
+
+    return sessions.map((session) => ({
+      id: session.id,
+      date: session.date,
+      notes: session.notes,
+    }));
+  }
+
   async getAttendanceReport(
     circleId: string,
     startDate: string,

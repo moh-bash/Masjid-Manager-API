@@ -83,6 +83,49 @@ export class CirclesService {
     return circle;
   }
 
+  async findAll(paginationQuery: PaginationQueryDto) {
+    const { page = 1, limit = 10 } = paginationQuery;
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await this.circleRepository.findAndCount({
+      skip,
+      take: limit,
+      relations: {
+        teacher: true,
+        mosque: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        level: true,
+        createdAt: true,
+        teacher: {
+          id: true,
+          name: true,
+        },
+        mosque: {
+          id: true,
+          name: true,
+        },
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+
   async findByMosque(mosqueId: string, paginationQuery: PaginationQueryDto) {
     const { page = 1, limit = 10 } = paginationQuery;
     const skip = (page - 1) * limit;

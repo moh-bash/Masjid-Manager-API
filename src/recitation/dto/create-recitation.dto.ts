@@ -14,10 +14,6 @@ export class CreateRecitationDto {
   studentId!: string;
 
   @IsUUID()
-  @IsNotEmpty()
-  sessionId!: string;
-
-  @IsUUID()
   @IsOptional()
   teacherId?: string;
 

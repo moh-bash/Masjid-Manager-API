@@ -34,6 +34,13 @@ export class CirclesController {
   }
 
   
+  @Get()
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.SYSTEM_ADMIN)
+  findAll(@Query() paginationQuery: PaginationQueryDto) {
+    return this.circlesService.findAll(paginationQuery);
+  }
+
   @Get('me')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.CIRCLE_TEACHER)

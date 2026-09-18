@@ -41,6 +41,15 @@ export class AttendanceController {
     return this.attendanceService.getSessionByDate(circleId, date, user);
   }
 
+  @Get('circle/:circleId/sessions')
+  @UseGuards(AuthGuard)
+  async getCircleSessions(
+    @Param('circleId') circleId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.attendanceService.getCircleSessions(circleId, user);
+  }
+
   @Get('circle/:circleId/report')
   @UseGuards(AuthGuard)
   async getAttendanceReport(
