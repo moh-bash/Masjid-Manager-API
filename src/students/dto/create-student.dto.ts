@@ -22,6 +22,10 @@ export class CreateStudentDto {
   motherName!: string;
 
   @IsNotEmpty()
+  @IsString()
+  fatherName!: string;
+
+  @IsNotEmpty()
   @IsEnum(OrphanStatus)
   orphanStatus!: OrphanStatus;
 

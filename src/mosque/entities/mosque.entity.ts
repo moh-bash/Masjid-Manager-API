@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/users.entity';
+import { IsNotEmpty } from 'class-validator';
 
 @Entity('mosques')
 export class Mosque {
@@ -24,6 +25,12 @@ export class Mosque {
     lat: number;
     lng: number;
   };
+
+  @Column()
+  address!: string;
+
+  @Column()
+  description!: string;
 
   @ManyToOne(() => User, {
     nullable: false,

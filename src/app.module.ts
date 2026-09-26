@@ -10,6 +10,7 @@ import { StudentLinkModule } from './student-link/student-link.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { PostsModule } from './posts/posts.module';
 import { RecitationModule } from './recitation/recitation.module';
+import { PrayerModule } from './prayer/prayer.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { RecitationModule } from './recitation/recitation.module';
     AttendanceModule,
     PostsModule,
     RecitationModule,
+    PrayerModule,
     
   ],
   controllers: [],

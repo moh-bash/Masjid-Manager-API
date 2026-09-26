@@ -94,6 +94,7 @@ export class StudentsService {
       name: dto.name,
       dateOfBirth: new Date(dto.dateOfBirth),
       motherName: dto.motherName,
+      fatherName: dto.fatherName,
       orphanStatus: dto.orphanStatus,
       registrationDate: new Date(dto.registrationDate),
       mosque,
@@ -397,6 +398,7 @@ export class StudentsService {
     if (dto.name) student.name = dto.name;
     if (dto.dateOfBirth) student.dateOfBirth = new Date(dto.dateOfBirth);
     if (dto.motherName) student.motherName = dto.motherName;
+    if (dto.fatherName) student.fatherName = dto.fatherName;
     if (dto.orphanStatus) student.orphanStatus = dto.orphanStatus;
     if (dto.registrationDate)
       student.registrationDate = new Date(dto.registrationDate);

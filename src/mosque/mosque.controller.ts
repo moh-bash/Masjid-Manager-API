@@ -31,8 +31,6 @@ export class MosqueController {
   }
 
   @Get()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(Role.SYSTEM_ADMIN)
   findAll(@Query() paginationQuery: PaginationQueryDto) {
     return this.mosqueService.findAll(paginationQuery);
   }

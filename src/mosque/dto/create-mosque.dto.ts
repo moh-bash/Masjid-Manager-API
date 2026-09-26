@@ -16,4 +16,11 @@ export class CreateMosqueDto {
         lat: number;
         lng: number;
     };
+
+    @IsNotEmpty()
+    @IsString()
+    address!: string;
+
+    @IsString()
+    description?: string;
 }

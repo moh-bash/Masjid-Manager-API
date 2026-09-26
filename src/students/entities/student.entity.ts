@@ -27,6 +27,9 @@ export class Student {
   @Column({ name: 'mother_name' })
   motherName!: string;
 
+  @Column({ name: 'father_name' })
+  fatherName!: string;
+
   @Column({
     type: 'enum',
     enum: OrphanStatus,

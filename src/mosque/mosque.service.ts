@@ -36,6 +36,8 @@ export class MosqueService {
         lng: dto.location.lng,
       },
       manager: manager ,
+      address: dto.address,
+      description: dto.description || '',
     };
 
     const mosqueInstance = this.mosqueRepository.create(newMosque);
@@ -85,6 +87,8 @@ export class MosqueService {
         location: true,
         createdAt: true,
         updatedAt: true,
+        address: true,
+        description: true,
         manager: {
           name: true,
           email: true,
