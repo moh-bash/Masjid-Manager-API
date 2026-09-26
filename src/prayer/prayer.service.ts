@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Prayer } from './entities/prayer.entity';
 import { User } from '../users/entities/users.entity';
 import { UpsertPrayerDto } from './dto/upsert-prayer.dto';
@@ -23,7 +23,6 @@ export class PrayerService {
   async upsertTodayPrayer(dto: UpsertPrayerDto, currentUser: User): Promise<Prayer> {
     const todayStr = this.getTodayString();
 
-    // التحقق من حالة التسجيل الحالية إن وجدت
     let existingLog = await this.prayerRepository.findOne({
       where: {
         studentId: dto.studentId,
@@ -53,6 +52,18 @@ export class PrayerService {
       where: {
         studentId,
         date: todayStr,
+      },
+    });
+  }
+
+  async getStudentPrayerReport(studentId: string, startDate: string, endDate: string): Promise<Prayer[]> {
+    return await this.prayerRepository.find({
+      where: {
+        studentId,
+        date: Between(startDate, endDate),
+      },
+      order: {
+        date: 'ASC',
       },
     });
   }
