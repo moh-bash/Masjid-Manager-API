@@ -11,6 +11,7 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { PostsModule } from './posts/posts.module';
 import { RecitationModule } from './recitation/recitation.module';
 import { PrayerModule } from './prayer/prayer.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { PrayerModule } from './prayer/prayer.module';
     PostsModule,
     RecitationModule,
     PrayerModule,
+    AnalyticsModule,
     
   ],
   controllers: [],
